@@ -36,21 +36,31 @@ selected_user = st.selectbox("👤 Choose a player", st.session_state.users)
 user_state = st.session_state.user_data[selected_user]
 
 # ----------------- Game Setup -----------------
-if user_state['games_to_play'] == 0 and user_state['games_played'] == 0:
-    num_games = st.selectbox("🎮 How many games do you want to play?", [5, 10, 15, 20], key=f"select_{selected_user}")
-    entry_fee = num_games * 10
+# ----------------- Game Setup -----------------
+if user_state['games_played'] == 0:
+    if user_state['games_to_play'] == 0:
+        st.session_state[f'num_games_{selected_user}'] = st.selectbox(
+            "🎮 How many games do you want to play?",
+            [5, 10, 15, 20],
+            key=f"select_{selected_user}"
+        )
 
-    if user_state['coins'] < entry_fee:
-        loan_amount = entry_fee - user_state['coins']
-        user_state['coins'] += loan_amount
-        user_state['loan_taken'] = True
-        user_state['loan_amount'] += loan_amount
-        st.info(f"💰 Loan of {loan_amount} coins given to {selected_user} to start the game.")
+    if st.button("✅ Confirm Games"):
+        selected_games = st.session_state[f'num_games_{selected_user}']
+        entry_fee = selected_games * 10
 
-    user_state['coins'] -= entry_fee
-    user_state['games_to_play'] = num_games
-    user_state['revenue'] += entry_fee
-    st.success(f"🎮 {num_games} games set for {selected_user}")
+        if user_state['coins'] < entry_fee:
+            loan_amount = entry_fee - user_state['coins']
+            user_state['coins'] += loan_amount
+            user_state['loan_taken'] = True
+            user_state['loan_amount'] += loan_amount
+            st.info(f"💰 Loan of {loan_amount} coins given to {selected_user} to start the game.")
+
+        user_state['coins'] -= entry_fee
+        user_state['games_to_play'] = selected_games
+        user_state['revenue'] += entry_fee
+        st.success(f"🎮 {selected_games} games set for {selected_user}")
+
 
 # ----------------- Game Play -----------------
 if user_state['games_played'] < user_state['games_to_play']:
