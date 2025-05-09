@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-# Initialize session state variables
+# Ensure session variables are initialized before any logic is run
 if 'coins' not in st.session_state:
     st.session_state.coins = 0
 if 'loan_taken' not in st.session_state:
@@ -26,7 +26,7 @@ source_bag = ['Red'] * 4 + ['Blue'] * 2
 st.markdown("### 🎒 Transparent Bag (Click Play to draw 4 balls)")
 st.markdown(" ".join([ball_emoji[color] for color in source_bag]))
 
-# Game setup
+# Select number of games
 min_games = 15  # Minimum games required
 if st.session_state.games_to_play == 0:
     num_games = st.selectbox("🎮 How many games do you want to play?", [5, 10, 15, 20])
@@ -35,9 +35,8 @@ if st.session_state.games_to_play == 0:
         st.warning(f"Please choose at least {min_games} games to ensure fair play and stable rewards.")
     
     entry_fee_per_game = 10
-    # Dynamic entry fee based on number of games
     if num_games < min_games:
-        entry_fee_per_game = 12
+        entry_fee_per_game = 12  # Adjusted fee for fewer games
 
     entry_fee_total = num_games * entry_fee_per_game
 
@@ -58,7 +57,10 @@ if st.session_state.games_to_play == 0:
 # Progressive play
 if st.session_state.games_to_play > 0 and st.session_state.games_played < st.session_state.games_to_play:
     if st.button("▶️ Play"):
-        # Ensure session state variables are initialized
+        # Debugging: Check session state variables before proceeding
+        st.write(f"Debugging: Session state - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}")
+        
+        # Ensure session state variables are initialized again (Double check)
         if 'revenue' not in st.session_state:
             st.session_state.revenue = 0
         if 'payout' not in st.session_state:
@@ -74,18 +76,20 @@ if st.session_state.games_to_play > 0 and st.session_state.games_played < st.ses
         blue = drawn.count('Blue')
         reward = 0
 
-        # Jackpot cap logic (only once every 20 games)
+        # Jackpot cap logic
         if red == 4 and st.session_state.jackpot_hits < 1:
             reward = 30  # Reduced jackpot reward
             st.session_state.jackpot_hits += 1
         elif (red == 3 and blue == 1) or (red == 2 and blue == 2) or (red == 1 and blue == 3):
             reward = 5
 
+        # Update session state
         st.session_state.revenue += entry_fee_per_game
         st.session_state.payout += reward
         st.session_state.coins += (reward - entry_fee_per_game)
         st.session_state.games_played += 1
 
+        # Display the result
         st.markdown(f"### 🎯 Game {st.session_state.games_played} Result")
         reward_str = (
             "🏆 30 coins" if red == 4 else
