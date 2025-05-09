@@ -32,8 +32,8 @@ num_games = st.selectbox("🎮 How many games do you want to play?", [5, 10, 15,
 entry_fee_per_game = 10
 min_required_coins = num_games * entry_fee_per_game
 
-# Update the number of games to play based on the user's selection
-if st.session_state.games_to_play == 0:  # Initialize only if not already initialized
+# Initialize games_to_play if not set
+if st.session_state.games_to_play == 0:
     st.session_state.games_to_play = num_games
 
 # Provide loan if coins are insufficient
