@@ -1,85 +1,69 @@
-
 import streamlit as st
 import random
 
-st.set_page_config(page_title="Ball Reward Game", layout="centered")
+if 'coins' not in st.session_state:
+    st.session_state.coins = 0
+if 'loan_taken' not in st.session_state:
+    st.session_state.loan_taken = False
+if 'revenue' not in st.session_state:
+    st.session_state.revenue = 0
+if 'payout' not in st.session_state:
+    st.session_state.payout = 0
+if 'drawn_balls' not in st.session_state:
+    st.session_state.drawn_balls = []
 
 st.title("🎲 Ball Reward Game")
-st.markdown("Play a game of chance! Earn coins based on the combination of red and blue balls drawn.")
 
-# Sidebar for inputs
-st.sidebar.header("Game Settings")
+ball_emoji = {"Red": "🔴", "Blue": "🔵"}
+source_bag = ['Red'] * 4 + ['Blue'] * 2
+st.markdown("### 🎒 Transparent Bag (Click Play to draw 4 balls)")
+st.markdown(" ".join([ball_emoji[color] for color in source_bag]))
 
-games_to_play = st.sidebar.selectbox("Select number of games to play:", options=[i for i in range(5, 101, 5)])
-user_coins = st.sidebar.number_input("Enter your coin pocket balance:", min_value=0, value=0, step=1)
-
+num_games = st.selectbox("🎮 How many games do you want to play?", [5, 10, 15, 20])
 entry_fee_per_game = 10
-reward_4_red = 50
-small_reward = 5
-total_required_coins = games_to_play * entry_fee_per_game
+min_required_coins = num_games * entry_fee_per_game
 
-if 'game_started' not in st.session_state:
-    st.session_state.game_started = False
+if st.session_state.coins < min_required_coins:
+    if not st.session_state.loan_taken:
+        st.session_state.coins += min_required_coins
+        st.session_state.loan_taken = True
+        st.info(f"💰 You've been lent {min_required_coins} coins to start playing.")
 
-if st.sidebar.button("Start Game"):
-    st.session_state.game_started = True
+if st.button("▶️ Play"):
+    st.session_state.drawn_balls.clear()
 
-if st.session_state.game_started:
-    borrowed_coins = 0
-    current_coins = user_coins
+    for game in range(num_games):
+        drawn = random.sample(source_bag, 4)
+        st.session_state.drawn_balls.append(drawn)
 
-    if current_coins < total_required_coins:
-        borrowed_coins = total_required_coins - current_coins
-        st.warning(f"Not enough coins! Lending you {borrowed_coins} coins.")
-        current_coins += borrowed_coins
-
-    total_payout = 0
-    st.subheader("🎮 Game Results")
-
-    for game in range(1, games_to_play + 1):
-        st.markdown(f"#### Game {game}")
-        current_coins -= entry_fee_per_game
-        balls = [random.choice(['Red', 'Blue']) for _ in range(4)]
-        red = balls.count('Red')
-        blue = balls.count('Blue')
-        st.write(f"Balls drawn: {balls} -> Red: {red}, Blue: {blue}")
+        red = drawn.count('Red')
+        blue = drawn.count('Blue')
+        reward = 0
 
         if red == 4:
-            reward = reward_4_red
-            st.success(f"🎉 You got 4 Red balls! Reward: {reward} coins")
-        elif red == 3 and blue == 1:
-            reward = small_reward
-            st.info(f"You got 3 Red and 1 Blue balls. Reward: {reward} coins")
-        elif red == 2 and blue == 2:
-            reward = small_reward
-            st.info(f"You got 2 Red and 2 Blue balls. Reward: {reward} coins")
-        elif red == 1 and blue == 3:
-            reward = small_reward
-            st.info(f"You got 1 Red and 3 Blue balls. Reward: {reward} coins")
-        else:
-            reward = 0
-            st.warning("No reward. All 4 balls are Blue.")
+            reward = 50
+        elif (red == 3 and blue == 1) or (red == 2 and blue == 2) or (red == 1 and blue == 3):
+            reward = 5
 
-        current_coins += reward
-        total_payout += reward
-        st.write(f"💰 Current Coin Pocket Balance: {current_coins} coins")
+        st.session_state.revenue += entry_fee_per_game
+        st.session_state.payout += reward
+        st.session_state.coins += (reward - entry_fee_per_game)
 
-    if borrowed_coins > 0:
-        st.info(f"💸 Repaying borrowed coins: {borrowed_coins}")
-        current_coins -= borrowed_coins
+    st.markdown("## 🎯 Game Results")
+    for i, balls in enumerate(st.session_state.drawn_balls):
+        red = balls.count("Red")
+        blue = balls.count("Blue")
+        reward_str = (
+            "🏆 50 coins" if red == 4 else
+            "🥈 5 coins" if red in [1, 2, 3] else
+            "❌ No reward"
+        )
+        st.write(f"Game {i+1}: " + " ".join([ball_emoji[color] for color in balls]) + f" → Reward: {reward_str}")
 
-    st.markdown("## 🧾 Player Summary")
-    st.write(f"Total Games Played: {games_to_play}")
-    st.write(f"Total Entry Fee Paid: {games_to_play * entry_fee_per_game} coins")
-    st.write(f"Total Rewards Earned: {total_payout} coins")
-    st.write(f"Net Coin Balance in Pocket: {current_coins} coins")
+    st.success(f"💰 Your total coins now: {st.session_state.coins}")
 
-    st.markdown("---")
-    st.markdown("## 📊 Game Owner Summary")
-    revenue = games_to_play * entry_fee_per_game
-    profit = revenue - total_payout
-    st.write(f"Total Revenue: {revenue} coins")
-    st.write(f"Total Payout: {total_payout} coins")
-    st.write(f"Net Profit: {profit} coins")
-
-    st.success("✅ Game Over! Thanks for playing.")
+with st.expander("👑 Show Game Owner Profit Summary"):
+    st.markdown("### 📊 Profit Summary")
+    st.write(f"Total Revenue: {st.session_state.revenue} coins")
+    st.write(f"Total Payout: {st.session_state.payout} coins")
+    st.write(f"Net Profit: {st.session_state.revenue - st.session_state.payout} coins")
