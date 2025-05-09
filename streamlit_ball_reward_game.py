@@ -76,6 +76,10 @@ if user['coins'] < 10 and user['games_to_play'] == 0:
 
 # ---------- Reset Button ----------
 if st.button("🔁 Reset Game"):
+    if user['coins'] < 10:
+        user['coins'] += 100
+        st.info("💰 You had less than 10 coins. We've credited 100 new coins to your account!")
+
     user['games_to_play'] = 0
     user['games_played'] = 0
     user['loan_taken'] = False
@@ -83,8 +87,7 @@ if st.button("🔁 Reset Game"):
     user['revenue'] = 0
     user['payout'] = 0
     user['history'] = []
-    st.success("✅ Game has been reset. You can start a new game.")
-
+    st.success("✅ Game has been reset. You can now start a new round.")
 # ---------- Owner Profit Summary ----------
 if st.button("📊 Show Owner Profit Summary"):
     st.markdown(f"**💼 Total Profit Earned by Game Owner:** `{st.session_state.owner_profit}` coins")
