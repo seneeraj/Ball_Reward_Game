@@ -52,6 +52,8 @@ if st.session_state.games_to_play == 0:
         st.session_state.drawn_balls.clear()
         st.session_state.games_played = 0
         st.session_state.jackpot_hits = 0
+        st.session_state.revenue = 0  # Reset revenue to 0 for fresh start
+        st.session_state.payout = 0  # Reset payout to 0 for fresh start
         st.success(f"🎮 Game started! Click ▶️ Play to begin {num_games} games.")
 
 # Progressive play
