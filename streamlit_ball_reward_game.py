@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-# Initialize session state variables
+# Initialize session state variables if not present
 if 'coins' not in st.session_state:
     st.session_state.coins = 60
 if 'loan_taken' not in st.session_state:
@@ -56,6 +56,9 @@ if st.button("🔁 Reset Game"):
 
 # Game logic when Play button is clicked
 if st.button("▶️ Play"):
+    # Debugging: print session state variables
+    st.write(f"Debugging: games_played = {st.session_state.games_played}, games_to_play = {st.session_state.games_to_play}")
+
     if st.session_state.games_played < st.session_state.games_to_play:
         # Ensure user has enough coins, otherwise lend them more
         if st.session_state.coins < entry_fee_per_game:
