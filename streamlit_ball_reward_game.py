@@ -1,103 +1,74 @@
 import streamlit as st
 import random
 
-# ---------- Initialize Session State ----------
-if 'users' not in st.session_state:
-    st.session_state.users = {
-        'user1': {'coins': 100, 'games_to_play': 0, 'games_played': 0,
-                  'loan_taken': False, 'loan_amount': 0, 'revenue': 0, 'payout': 0, 'history': [],
-                  'red_count': 0, 'blue_count': 0},
-        'user2': {'coins': 100, 'games_to_play': 0, 'games_played': 0,
-                  'loan_taken': False, 'loan_amount': 0, 'revenue': 0, 'payout': 0, 'history': [],
-                  'red_count': 0, 'blue_count': 0},
-    }
+def draw_balls():
+    return [random.choice(['Red', 'Blue']) for _ in range(4)]
 
-if 'owner_profit' not in st.session_state:
-    st.session_state.owner_profit = 0
+def count_colors(balls):
+    return balls.count('Red'), balls.count('Blue')
 
-# ---------- User Selection ----------
-selected_user = st.selectbox("Choose a user:", list(st.session_state.users.keys()))
-user = st.session_state.users[selected_user]
+st.set_page_config(page_title="Ball Draw Game", page_icon="🎲")
 
-st.markdown(f"**💰 Coins:** {user['coins']}")
-st.markdown(f"**🎮 Games Played:** {user['games_played']} / {user['games_to_play']}")
+st.title("🎯 Ball Draw Game")
 
-# ---------- Start Game ----------
-if user['games_to_play'] == 0 and user['games_played'] == 0:
-    num_games = st.selectbox("Select number of games to play:", [5, 10, 15, 20], key=f"{selected_user}_game_select")
-    if st.button("✅ Confirm Games"):
-        total_fee = num_games * 10
-        if user['coins'] < total_fee:
-            loan = total_fee - user['coins']
-            user['coins'] += loan
-            user['loan_taken'] = True
-            user['loan_amount'] += loan
-            st.warning(f"💸 Loan granted: {loan} coins")
+entry_fee_per_game = 10
+reward_4_red = 50
+small_reward = 5
 
-        user['coins'] -= total_fee
-        user['games_to_play'] = num_games
-        user['revenue'] += total_fee
-        st.success(f"🎯 Game started for {num_games} rounds!")
+st.markdown("Choose how many games you want to play:")
+games_to_play = st.selectbox("🎮 Number of Games", options=list(range(5, 105, 5)))
 
-# ---------- Play Button ----------
-if user['games_to_play'] > 0 and user['games_played'] < user['games_to_play'] and user['coins'] >= 0:
-    if st.button("▶️ Play"):
-        ball = random.choice(['red'] * 4 + ['blue'] * 2)
-        payout = 0
+current_coins = st.number_input("💰 Enter how many coins you have in your coin pocket", min_value=0, step=1)
 
-        if ball == 'red':
-            user['red_count'] += 1
-            st.info("🟥 You drew a Red ball.")
+play_game = st.button("▶️ Play")
+
+if play_game:
+    total_required_coins = games_to_play * entry_fee_per_game
+    borrowed_coins = 0
+
+    if current_coins < total_required_coins:
+        borrowed_coins = total_required_coins - current_coins
+        st.warning(f"⚠️ You don’t have enough coins. Lending you {borrowed_coins} coins.")
+        current_coins += borrowed_coins
+
+    total_payout = 0
+    game_results = []
+
+    for game in range(1, games_to_play + 1):
+        current_coins -= entry_fee_per_game
+        balls = draw_balls()
+        red, blue = count_colors(balls)
+
+        if red == 4:
+            reward = reward_4_red
+            outcome = f"🎉 Game {game}: 4 Red balls! Reward: {reward} coins"
+        elif red == 3 and blue == 1:
+            reward = small_reward
+            outcome = f"Game {game}: 3 Red, 1 Blue. Reward: {reward} coins"
+        elif red == 2 and blue == 2:
+            reward = small_reward
+            outcome = f"Game {game}: 2 Red, 2 Blue. Reward: {reward} coins"
+        elif red == 1 and blue == 3:
+            reward = small_reward
+            outcome = f"Game {game}: 1 Red, 3 Blue. Reward: {reward} coins"
         else:
-            user['blue_count'] += 1
-            st.info("🟦 You drew a Blue ball.")
+            reward = 0
+            outcome = f"Game {game}: All Blue. No reward."
 
-        # Check Jackpot or Loss condition
-        if user['red_count'] >= 4:
-            payout = 100
-            st.balloons()
-            st.success("🎉 JACKPOT! You got 4 Red balls!")
-        elif user['blue_count'] >= 4:
-            payout = 0
-            st.error("💀 You got 4 Blue balls. No payout this round.")
-        else:
-            payout = 5
-            st.success("✅ You earned 5 coins.")
+        current_coins += reward
+        total_payout += reward
+        game_results.append(f"{outcome} | Balls: {balls} | Current Balance: {current_coins} coins")
 
-        user['coins'] += payout
-        user['payout'] += payout
-        user['games_played'] += 1
-        user['history'].append(ball)
+    if borrowed_coins > 0:
+        st.info(f"💸 Repaying borrowed coins: {borrowed_coins}")
+        current_coins -= borrowed_coins
 
-        st.markdown(f"**New Coin Balance:** {user['coins']}")
-        st.markdown(f"**🔴 Red Balls:** {user['red_count']} | 🔵 Blue Balls:** {user['blue_count']}")
+    with st.expander("📜 Game-by-Game Results"):
+        for result in game_results:
+            st.write(result)
 
-        if user['games_played'] == user['games_to_play'] or user['coins'] < 10:
-            st.warning("🎮 Game Over for this round. Click Reset to play again.")
-            profit = user['revenue'] - user['payout']
-            st.session_state.owner_profit += profit
-
-# ---------- Game Over Message ----------
-if user['games_to_play'] > 0 and user['games_played'] >= user['games_to_play']:
-    st.warning("🎮 You've played all your games. Click Reset to play a new round.")
-
-# ---------- Reset Button ----------
-if st.button("🔁 Reset Game"):
-    if user['coins'] < 10:
-        user['coins'] += 100
-        st.info("💰 You had less than 10 coins. We've credited 100 new coins to your account!")
-
-    user['games_to_play'] = 0
-    user['games_played'] = 0
-    user['loan_taken'] = False
-    user['loan_amount'] = 0
-    user['revenue'] = 0
-    user['payout'] = 0
-    user['history'] = []
-    user['red_count'] = 0
-    user['blue_count'] = 0
-    st.success("✅ Game has been reset. You can now start a new round.")
-
-# ---------- Owner Profit Summary ----------
-if st.button("📊 Show Owner Profit Summary"):
-    st.markdown(f"**💼 Total Profit Earned by Game Owner:** `{st.session_state.owner_profit}` coins")
+    st.subheader("📊 Game Summary")
+    st.write(f"Total Games Played: {games_to_play}")
+    st.write(f"Total Entry Fee Paid: {games_to_play * entry_fee_per_game} coins")
+    st.write(f"Total Rewards Earned: {total_payout} coins")
+    st.write(f"Net Coin Balance in Pocket: {current_coins} coins")
