@@ -60,7 +60,7 @@ if st.session_state.games_to_play == 0:
 if st.session_state.games_to_play > 0 and st.session_state.games_played < st.session_state.games_to_play:
     if st.button("▶️ Play"):
         # Debugging: Check session state variables before proceeding
-        st.write(f"Debugging: Session state before play - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}")
+        st.write(f"Debugging: Before Play - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}, games_played: {st.session_state.games_played}")
         
         # Play one game at a time
         drawn = random.sample(source_bag, 4)
@@ -84,7 +84,7 @@ if st.session_state.games_to_play > 0 and st.session_state.games_played < st.ses
         st.session_state.games_played += 1
 
         # Debugging: Check session state after play
-        st.write(f"Debugging: Session state after play - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}")
+        st.write(f"Debugging: After Play - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}, games_played: {st.session_state.games_played}")
 
         # Display the result
         st.markdown(f"### 🎯 Game {st.session_state.games_played} Result")
