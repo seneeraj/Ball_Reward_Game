@@ -100,15 +100,16 @@ if st.session_state.games_played == st.session_state.games_to_play and st.sessio
     if st.session_state.loan_taken:
         st.warning(f"💳 You were lent a total of {st.session_state.loan_amount} coins.")
 
-    # Reset button
-    if st.button("🔁 Reset Game"):
-        keys_to_clear = [
-            'drawn_balls', 'games_to_play', 'games_played',
-            'loan_taken', 'loan_amount', 'revenue', 'payout'
-        ]
-        for key in keys_to_clear:
-            st.session_state[key] = 0 if isinstance(st.session_state[key], int) else False
-        st.success("✅ Game has been reset. Start a new round!")
+   # Reset button
+if st.button("🔁 Reset Game"):
+    st.session_state.drawn_balls = []
+    st.session_state.games_to_play = 0
+    st.session_state.games_played = 0
+    st.session_state.loan_taken = False
+    st.session_state.loan_amount = 0
+    st.session_state.revenue = 0
+    st.session_state.payout = 0
+    st.success("✅ Game has been reset. Start a new round!")
 
 # --- Profit Summary ---
 with st.expander("👑 Show Game Owner Profit Summary"):
