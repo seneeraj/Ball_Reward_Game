@@ -3,7 +3,7 @@ import random
 
 # Ensure session variables are initialized before any logic is run
 if 'coins' not in st.session_state:
-    st.session_state.coins = 0
+    st.session_state.coins = 60  # Starting with 60 coins
 if 'loan_taken' not in st.session_state:
     st.session_state.loan_taken = False
 if 'revenue' not in st.session_state:
@@ -62,14 +62,6 @@ if st.session_state.games_to_play > 0 and st.session_state.games_played < st.ses
         # Debugging: Check session state variables before proceeding
         st.write(f"Debugging: Session state - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}")
         
-        # Ensure session state variables are initialized again (Double check)
-        if 'revenue' not in st.session_state:
-            st.session_state.revenue = 0
-        if 'payout' not in st.session_state:
-            st.session_state.payout = 0
-        if 'coins' not in st.session_state:
-            st.session_state.coins = 0
-
         # Play one game at a time
         drawn = random.sample(source_bag, 4)
         st.session_state.drawn_balls.append(drawn)
