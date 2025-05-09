@@ -68,7 +68,7 @@ if st.button("▶️ Play"):
                 st.session_state.loan_taken = True
                 st.session_state.loan_amount += entry_fee_per_game
                 st.info(f"💰 Loan granted: {entry_fee_per_game} coins to continue playing.")
-
+        
         # Draw one game's result
         drawn = random.sample(source_bag, 4)
         st.session_state.drawn_balls.append(drawn)
@@ -88,6 +88,7 @@ if st.button("▶️ Play"):
         st.write(" ".join([ball_emoji[color] for color in drawn]))
         st.write(f"🎁 Reward: {'🏆 50 coins' if reward == 50 else '🥈 5 coins' if reward == 5 else '❌ No reward'}")
         st.success(f"💰 Coins: {st.session_state.coins}")
+
     else:
         st.warning("🎮 You've already played all your games. Click Reset to start over.")
 
