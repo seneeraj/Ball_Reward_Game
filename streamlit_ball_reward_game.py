@@ -57,7 +57,7 @@ if st.button("🔁 Reset Game"):
 # Game logic when Play button is clicked
 if st.button("▶️ Play"):
     # Debugging: print session state variables
-    st.write(f"Debugging: games_played = {st.session_state.games_played}, games_to_play = {st.session_state.games_to_play}")
+    st.write(f"Debugging - Session State: games_played = {st.session_state.games_played}, games_to_play = {st.session_state.games_to_play}, coins = {st.session_state.coins}, loan_taken = {st.session_state.loan_taken}")
 
     # Check if there are games left to play
     if st.session_state.games_played < st.session_state.games_to_play:
@@ -68,7 +68,7 @@ if st.button("▶️ Play"):
                 st.session_state.loan_taken = True
                 st.session_state.loan_amount += entry_fee_per_game
                 st.info(f"💰 Loan granted: {entry_fee_per_game} coins to continue playing.")
-        
+
         # Draw one game's result
         drawn = random.sample(source_bag, 4)
         st.session_state.drawn_balls.append(drawn)
