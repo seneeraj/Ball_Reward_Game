@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
+import time  # To simulate real-time results
 
 # ---------- CSV File Handling ----------
 CSV_FILE = "user_data.csv"
@@ -20,6 +21,10 @@ if 'games_to_play' not in st.session_state:
     st.session_state.games_to_play = 0
 if 'games_played' not in st.session_state:
     st.session_state.games_played = 0
+if 'jackpot_wins' not in st.session_state:
+    st.session_state.jackpot_wins = 0
+if 'coins_earned' not in st.session_state:
+    st.session_state.coins_earned = 0
 
 # ---------- User Selection ----------
 selected_user = st.selectbox("Choose a user:", list(df.index) + ["Game Owner"])
@@ -40,14 +45,12 @@ else:
 
     st.markdown(f"**💰 Coins:** {user['coins']}")
 
-    # Ask for game count if not initialized
+    # Ask for game count before play
     if st.session_state.games_to_play == 0:
-        st.session_state.games_to_play = st.selectbox("Select number of games to play:", [5, 10, 15, 20])
-        st.button("✅ Confirm Games")
+        st.session_state.games_to_play = st.selectbox("How many games do you want to play?", [5, 10, 15, 20])
 
-    # Play the game
+    # Play the game (one round at a time)
     if st.button("▶️ Play"):
-        results = []
         for _ in range(st.session_state.games_to_play):
             if user['coins'] < 10:
                 st.error("❌ Insufficient coins! Exiting the game.")
@@ -59,18 +62,23 @@ else:
             blue_count = balls.count("Blue")
 
             if red_count == 4:
-                payout = 30  # JACKPOT if exactly 4 reds
+                payout = 30  # JACKPOT
                 st.balloons()
-                results.append(f"🎉 JACKPOT! You got 4 Red balls → Earned {payout} coins!")
+                st.success(f"🎉 JACKPOT! You got 4 Red balls → Earned {payout} coins!")
+                st.session_state.jackpot_wins += 1
             elif blue_count == 4:
-                payout = 0  # No reward if 4 blue
-                results.append(f"🚫 No reward. You got 4 Blue balls.")
+                payout = 0  # No reward
+                st.warning(f"🚫 No reward. You got 4 Blue balls.")
             else:
                 payout = 5  # Regular reward
-                results.append(f"🎲 You got {red_count} Red & {blue_count} Blue → Earned {payout} coins.")
+                st.info(f"🎲 You got {red_count} Red & {blue_count} Blue → Earned {payout} coins.")
 
             user['coins'] += payout - 10  # Deduct entry fee
-            st.session_state.owner_profit += 10  # Owner earns entry fee per game
+            st.session_state.coins_earned += payout
+
+            st.markdown(f"💰 **Updated Coin Balance:** {user['coins']}")
+
+            time.sleep(1.5)  # Simulate delay for real-time play
 
         # Deduct loan at end of game
         if user['coins'] > 50:  
@@ -78,8 +86,13 @@ else:
 
         df.loc[selected_user] = user
         df.to_csv(CSV_FILE)
-        st.markdown("\n".join(results))
-        st.markdown(f"**New Coin Balance:** {user['coins']}")
+
+        # Summary at the end of all games
+        st.subheader("🎮 Game Summary")
+        st.markdown(f"- **Total Games Played:** {st.session_state.games_to_play}")
+        st.markdown(f"- **Total Coins Earned:** {st.session_state.coins_earned}")
+        st.markdown(f"- **Jackpot Wins:** {st.session_state.jackpot_wins}")
+        st.markdown(f"- **Final Coin Balance:** {user['coins']}")
 
     # Quit Game & Save Coins
     if st.button("🚪 Quit Game"):
