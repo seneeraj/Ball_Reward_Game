@@ -59,6 +59,7 @@ if st.button("▶️ Play"):
     # Debugging: print session state variables
     st.write(f"Debugging: games_played = {st.session_state.games_played}, games_to_play = {st.session_state.games_to_play}")
 
+    # Check if there are games left to play
     if st.session_state.games_played < st.session_state.games_to_play:
         # Ensure user has enough coins, otherwise lend them more
         if st.session_state.coins < entry_fee_per_game:
