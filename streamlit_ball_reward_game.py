@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-# Initialize session state only once
+# Initialize session state variables
 if 'coins' not in st.session_state:
     st.session_state.coins = 0
 if 'loan_taken' not in st.session_state:
@@ -25,9 +25,6 @@ ball_emoji = {"Red": "🔴", "Blue": "🔵"}
 source_bag = ['Red'] * 4 + ['Blue'] * 2
 st.markdown("### 🎒 Transparent Bag (Click Play to draw 4 balls)")
 st.markdown(" ".join([ball_emoji[color] for color in source_bag]))
-
-# Debugging step: Print session state
-st.write("Session State:", st.session_state)
 
 # Game setup
 min_games = 15  # Minimum games required
@@ -61,8 +58,13 @@ if st.session_state.games_to_play == 0:
 # Progressive play
 if st.session_state.games_to_play > 0 and st.session_state.games_played < st.session_state.games_to_play:
     if st.button("▶️ Play"):
-        # Debugging step: Print session state before play
-        st.write("Before play - Session State:", st.session_state)
+        # Ensure session state variables are initialized
+        if 'revenue' not in st.session_state:
+            st.session_state.revenue = 0
+        if 'payout' not in st.session_state:
+            st.session_state.payout = 0
+        if 'coins' not in st.session_state:
+            st.session_state.coins = 0
 
         # Play one game at a time
         drawn = random.sample(source_bag, 4)
@@ -78,14 +80,6 @@ if st.session_state.games_to_play > 0 and st.session_state.games_played < st.ses
             st.session_state.jackpot_hits += 1
         elif (red == 3 and blue == 1) or (red == 2 and blue == 2) or (red == 1 and blue == 3):
             reward = 5
-
-        # Ensure revenue and payout exist in session_state before modifying them
-        if 'revenue' not in st.session_state:
-            st.session_state.revenue = 0
-        if 'payout' not in st.session_state:
-            st.session_state.payout = 0
-        if 'coins' not in st.session_state:
-            st.session_state.coins = 0
 
         st.session_state.revenue += entry_fee_per_game
         st.session_state.payout += reward
