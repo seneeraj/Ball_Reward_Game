@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-# Initialize session state
+# Initialize session state only once
 if 'coins' not in st.session_state:
     st.session_state.coins = 0
 if 'loan_taken' not in st.session_state:
@@ -25,6 +25,9 @@ ball_emoji = {"Red": "🔴", "Blue": "🔵"}
 source_bag = ['Red'] * 4 + ['Blue'] * 2
 st.markdown("### 🎒 Transparent Bag (Click Play to draw 4 balls)")
 st.markdown(" ".join([ball_emoji[color] for color in source_bag]))
+
+# Debugging step: Print session state
+st.write("Session State:", st.session_state)
 
 # Game setup
 min_games = 15  # Minimum games required
@@ -58,6 +61,9 @@ if st.session_state.games_to_play == 0:
 # Progressive play
 if st.session_state.games_to_play > 0 and st.session_state.games_played < st.session_state.games_to_play:
     if st.button("▶️ Play"):
+        # Debugging step: Print session state before play
+        st.write("Before play - Session State:", st.session_state)
+
         # Play one game at a time
         drawn = random.sample(source_bag, 4)
         st.session_state.drawn_balls.append(drawn)
@@ -74,6 +80,13 @@ if st.session_state.games_to_play > 0 and st.session_state.games_played < st.ses
             reward = 5
 
         # Ensure revenue and payout exist in session_state before modifying them
+        if 'revenue' not in st.session_state:
+            st.session_state.revenue = 0
+        if 'payout' not in st.session_state:
+            st.session_state.payout = 0
+        if 'coins' not in st.session_state:
+            st.session_state.coins = 0
+
         st.session_state.revenue += entry_fee_per_game
         st.session_state.payout += reward
         st.session_state.coins += (reward - entry_fee_per_game)
