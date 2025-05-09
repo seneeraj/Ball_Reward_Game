@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import random
-import time  # To simulate real-time results
 
 # ---------- CSV File Handling ----------
 CSV_FILE = "user_data.csv"
@@ -48,14 +47,13 @@ else:
     # Ask for game count before play
     if st.session_state.games_to_play == 0:
         st.session_state.games_to_play = st.selectbox("How many games do you want to play?", [5, 10, 15, 20])
+        st.session_state.games_played = 0  # Reset played count
+        st.session_state.coins_earned = 0
+        st.session_state.jackpot_wins = 0
 
-    # Play the game (one round at a time)
+    # Play the game one step at a time
     if st.button("▶️ Play"):
-        for _ in range(st.session_state.games_to_play):
-            if user['coins'] < 10:
-                st.error("❌ Insufficient coins! Exiting the game.")
-                break  # End game early
-            
+        if st.session_state.games_played < st.session_state.games_to_play and user['coins'] >= 10:
             # Simulate drawing 6 balls randomly
             balls = random.choices(["Red", "Blue"], weights=[4, 2], k=6)
             red_count = balls.count("Red")
@@ -75,24 +73,23 @@ else:
 
             user['coins'] += payout - 10  # Deduct entry fee
             st.session_state.coins_earned += payout
+            st.session_state.games_played += 1
 
             st.markdown(f"💰 **Updated Coin Balance:** {user['coins']}")
 
-            time.sleep(1.5)  # Simulate delay for real-time play
+            if st.session_state.games_played == st.session_state.games_to_play or user['coins'] < 10:
+                st.subheader("🎮 Final Game Summary")
+                st.markdown(f"- **Total Games Played:** {st.session_state.games_played}")
+                st.markdown(f"- **Total Coins Earned:** {st.session_state.coins_earned}")
+                st.markdown(f"- **Jackpot Wins:** {st.session_state.jackpot_wins}")
+                st.markdown(f"- **Final Coin Balance:** {user['coins']}")
 
-        # Deduct loan at end of game
-        if user['coins'] > 50:  
-            user['coins'] -= 50  # If loan was granted, deduct from balance
+        elif user['coins'] < 10:
+            st.error("❌ Insufficient coins! Exiting the game.")
 
+        # Update user data in CSV
         df.loc[selected_user] = user
         df.to_csv(CSV_FILE)
-
-        # Summary at the end of all games
-        st.subheader("🎮 Game Summary")
-        st.markdown(f"- **Total Games Played:** {st.session_state.games_to_play}")
-        st.markdown(f"- **Total Coins Earned:** {st.session_state.coins_earned}")
-        st.markdown(f"- **Jackpot Wins:** {st.session_state.jackpot_wins}")
-        st.markdown(f"- **Final Coin Balance:** {user['coins']}")
 
     # Quit Game & Save Coins
     if st.button("🚪 Quit Game"):
