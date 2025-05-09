@@ -1,9 +1,9 @@
 import streamlit as st
 import random
 
-# Ensure session variables are initialized properly before any logic is run
+# Initialize session state
 if 'coins' not in st.session_state:
-    st.session_state.coins = 210  # Starting with 210 coins
+    st.session_state.coins = 0
 if 'loan_taken' not in st.session_state:
     st.session_state.loan_taken = False
 if 'revenue' not in st.session_state:
@@ -16,8 +16,8 @@ if 'games_to_play' not in st.session_state:
     st.session_state.games_to_play = 0
 if 'games_played' not in st.session_state:
     st.session_state.games_played = 0
-if 'jackpot_hits' not in st.session_state:
-    st.session_state.jackpot_hits = 0
+if 'entry_fee_per_game' not in st.session_state:
+    st.session_state.entry_fee_per_game = 10
 
 st.title("🎲 Ball Reward Game")
 
@@ -26,43 +26,27 @@ source_bag = ['Red'] * 4 + ['Blue'] * 2
 st.markdown("### 🎒 Transparent Bag (Click Play to draw 4 balls)")
 st.markdown(" ".join([ball_emoji[color] for color in source_bag]))
 
-# Select number of games
-min_games = 15  # Minimum games required
+# Step 1: Choose number of games
 if st.session_state.games_to_play == 0:
     num_games = st.selectbox("🎮 How many games do you want to play?", [5, 10, 15, 20])
-
-    if num_games < min_games:
-        st.warning(f"Please choose at least {min_games} games to ensure fair play and stable rewards.")
-    
     entry_fee_per_game = 10
-    if num_games < min_games:
-        entry_fee_per_game = 12  # Adjusted fee for fewer games
+    total_fee = num_games * entry_fee_per_game
 
-    entry_fee_total = num_games * entry_fee_per_game
-
-    if st.session_state.coins < entry_fee_total:
-        if not st.session_state.loan_taken:
-            st.session_state.coins += entry_fee_total
-            st.session_state.loan_taken = True
-            st.info(f"💰 You've been lent {entry_fee_total} coins to start playing.")
-
-    if st.button("Start Game"):
-        # Reset session state at game start
+    if st.button("💥 Start Game"):
+        if st.session_state.coins < total_fee:
+            if not st.session_state.loan_taken:
+                st.session_state.coins += total_fee
+                st.session_state.loan_taken = True
+                st.info(f"💰 You've been lent {total_fee} coins to start playing.")
         st.session_state.games_to_play = num_games
-        st.session_state.drawn_balls.clear()
         st.session_state.games_played = 0
-        st.session_state.jackpot_hits = 0
-        st.session_state.revenue = 0  # Reset revenue to 0 for fresh start
-        st.session_state.payout = 0  # Reset payout to 0 for fresh start
-        st.success(f"🎮 Game started! Click ▶️ Play to begin {num_games} games.")
+        st.session_state.drawn_balls = []
+        st.session_state.entry_fee_per_game = entry_fee_per_game
+        st.success("🎮 Game started! Click ▶️ Play to draw balls.")
 
-# Progressive play
+# Step 2: Play game one at a time
 if st.session_state.games_to_play > 0 and st.session_state.games_played < st.session_state.games_to_play:
     if st.button("▶️ Play"):
-        # Debugging: Check session state variables before proceeding
-        st.write(f"Debugging: Before Play - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}, games_played: {st.session_state.games_played}")
-        
-        # Play one game at a time
         drawn = random.sample(source_bag, 4)
         st.session_state.drawn_balls.append(drawn)
 
@@ -70,43 +54,38 @@ if st.session_state.games_to_play > 0 and st.session_state.games_played < st.ses
         blue = drawn.count('Blue')
         reward = 0
 
-        # Jackpot cap logic
-        if red == 4 and st.session_state.jackpot_hits < 1:
-            reward = 30  # Reduced jackpot reward
-            st.session_state.jackpot_hits += 1
+        if red == 4:
+            reward = 50
         elif (red == 3 and blue == 1) or (red == 2 and blue == 2) or (red == 1 and blue == 3):
             reward = 5
 
-        # Update session state (revenue, payout, coins)
-        st.session_state.revenue += entry_fee_per_game
+        # Update game stats
+        st.session_state.revenue += st.session_state.entry_fee_per_game
         st.session_state.payout += reward
-        st.session_state.coins += (reward - entry_fee_per_game)
+        st.session_state.coins += (reward - st.session_state.entry_fee_per_game)
         st.session_state.games_played += 1
 
-        # Debugging: Check session state after play
-        st.write(f"Debugging: After Play - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}, games_played: {st.session_state.games_played}")
-
-        # Display the result
-        st.markdown(f"### 🎯 Game {st.session_state.games_played} Result")
+# Step 3: Show game results
+if st.session_state.drawn_balls:
+    st.markdown("## 🎯 Game Results So Far")
+    for i, balls in enumerate(st.session_state.drawn_balls):
+        red = balls.count("Red")
         reward_str = (
-            "🏆 30 coins" if red == 4 else
+            "🏆 50 coins" if red == 4 else
             "🥈 5 coins" if red in [1, 2, 3] else
             "❌ No reward"
         )
-        st.write(" ".join([ball_emoji[color] for color in drawn]) + f" → Reward: {reward_str}")
-        st.info(f"💰 Coins: {st.session_state.coins} | Games Played: {st.session_state.games_played}/{st.session_state.games_to_play}")
+        st.write(f"Game {i+1}: " + " ".join([ball_emoji[color] for color in balls]) + f" → Reward: {reward_str}")
+    st.success(f"💰 Your total coins now: {st.session_state.coins}")
 
-# Game finished
-if st.session_state.games_to_play > 0 and st.session_state.games_played == st.session_state.games_to_play:
-    st.success("🎉 All games completed!")
-    st.write(f"💰 Final Coin Balance: {st.session_state.coins}")
-
+# Step 4: Summary
+if st.session_state.games_played == st.session_state.games_to_play and st.session_state.games_to_play > 0:
+    st.info("🎉 All games played! Start a new session to play again.")
     if st.button("🔁 Reset Game"):
         st.session_state.games_to_play = 0
         st.session_state.games_played = 0
-        st.session_state.drawn_balls.clear()
+        st.session_state.drawn_balls = []
 
-# Owner Summary
 with st.expander("👑 Show Game Owner Profit Summary"):
     st.markdown("### 📊 Profit Summary")
     st.write(f"Total Revenue: {st.session_state.revenue} coins")
