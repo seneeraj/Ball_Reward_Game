@@ -48,6 +48,7 @@ if st.session_state.games_to_play == 0:
             st.info(f"💰 You've been lent {entry_fee_total} coins to start playing.")
 
     if st.button("Start Game"):
+        # Reset session state at game start
         st.session_state.games_to_play = num_games
         st.session_state.drawn_balls.clear()
         st.session_state.games_played = 0
@@ -72,6 +73,7 @@ if st.session_state.games_to_play > 0 and st.session_state.games_played < st.ses
         elif (red == 3 and blue == 1) or (red == 2 and blue == 2) or (red == 1 and blue == 3):
             reward = 5
 
+        # Ensure revenue and payout exist in session_state before modifying them
         st.session_state.revenue += entry_fee_per_game
         st.session_state.payout += reward
         st.session_state.coins += (reward - entry_fee_per_game)
