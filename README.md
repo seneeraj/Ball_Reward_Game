@@ -1,44 +1,24 @@
 # 🎲 Ball Reward Game (Streamlit App)
 
-This is a fun and interactive Streamlit-based web application where users can play a ball drawing game and earn virtual coins based on the colors drawn.
+This is a visual and interactive ball game where users draw 4 balls from a transparent bag and win coins based on the color combination.
 
-## 💡 Game Rules
-
-- The player draws 4 balls (either Red or Blue) in each game.
-- Entry fee per game: 10 coins.
+## Game Rules
+- Transparent bag contains: 4 Red 🔴 and 2 Blue 🔵 balls
+- User chooses how many games to play (multiples of 5)
+- Each game costs 10 coins
 - Rewards:
-  - 4 Red balls → 50 coins
-  - 3 Red + 1 Blue → 5 coins
-  - 2 Red + 2 Blue → 5 coins
-  - 1 Red + 3 Blue → 5 coins
-  - 4 Blue balls → No reward
-- If user lacks coins, they are lent minimum required coins (deducted later from rewards).
+  - 4 Red Balls: 50 coins
+  - 3 Red + 1 Blue, 2 Red + 2 Blue, or 1 Red + 3 Blue: 5 coins
+  - 4 Blue: No reward
+- If user has no coins, auto-loan of 50 coins is given
 
-## 🚀 How to Run
-
-1. Clone the repository
-2. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-3. Run the app:
-
-```bash
-streamlit run streamlit_ball_reward_game.py
-```
-
-## 📊 Owner Summary
-
-After each play session, a detailed owner summary is displayed:
+## Owner View
+A collapsible summary shows:
 - Total Revenue
 - Total Payout
 - Net Profit
 
-Enjoy the game!
-
-## 🛠️ Built With
-
-- Python
-- Streamlit
+## Run the App
+```bash
+pip install -r requirements.txt
+streamlit run ball_reward_game.py
