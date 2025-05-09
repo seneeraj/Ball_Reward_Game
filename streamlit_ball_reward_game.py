@@ -1,83 +1,87 @@
 import streamlit as st
+import pandas as pd
 import random
 
-# ---------- Initialize Session State ----------
-if 'users' not in st.session_state:
-    st.session_state.users = {
-        'user1': {'coins': 100, 'games_to_play': 0, 'games_played': 0,
-                  'loan_taken': False, 'loan_amount': 0, 'revenue': 0, 'payout': 0, 'history': []},
-        'user2': {'coins': 100, 'games_to_play': 0, 'games_played': 0,
-                  'loan_taken': False, 'loan_amount': 0, 'revenue': 0, 'payout': 0, 'history': []},
-    }
+# ---------- CSV File Handling ----------
+CSV_FILE = "user_data.csv"
 
+# Load user data from CSV, create if missing
+try:
+    df = pd.read_csv(CSV_FILE, index_col="username")
+except FileNotFoundError:
+    initial_data = {'username': ['user1', 'user2'], 'coins': [100, 100]}
+    df = pd.DataFrame(initial_data).set_index("username")
+    df.to_csv(CSV_FILE)
+
+# ---------- Session State Initialization ----------
 if 'owner_profit' not in st.session_state:
     st.session_state.owner_profit = 0
+if 'games_to_play' not in st.session_state:
+    st.session_state.games_to_play = 0
+if 'games_played' not in st.session_state:
+    st.session_state.games_played = 0
 
 # ---------- User Selection ----------
-selected_user = st.selectbox("Choose a user:", list(st.session_state.users.keys()))
-user = st.session_state.users[selected_user]
+selected_user = st.selectbox("Choose a user:", list(df.index) + ["Game Owner"])
 
-st.markdown(f"**💰 Coins:** {user['coins']}")
-st.markdown(f"**🎮 Games Played:** {user['games_played']} / {user['games_to_play']}")
+if selected_user == "Game Owner":
+    st.markdown("🔒 Profit Summary Access Enabled")
+    if st.button("📊 Show Owner Profit Summary"):
+        st.markdown(f"**💼 Total Profit Earned by Game Owner:** `{st.session_state.owner_profit}` coins")
+else:
+    user = df.loc[selected_user]
 
-# ---------- Start Game ----------
-if user['games_to_play'] == 0 and user['games_played'] == 0:
-    num_games = st.selectbox("Select number of games to play:", [5, 10, 15, 20], key=f"{selected_user}_game_select")
-    if st.button("✅ Confirm Games"):
-        total_fee = num_games * 10
-        if user['coins'] < total_fee:
-            loan = total_fee - user['coins']
-            user['coins'] += loan
-            user['loan_taken'] = True
-            user['loan_amount'] += loan
-            st.warning(f"💸 Loan granted: {loan} coins")
+    # Grant loan if user has zero balance
+    if user['coins'] <= 0:
+        user['coins'] += 50  # Loan granted
+        df.loc[selected_user] = user
+        df.to_csv(CSV_FILE)
+        st.warning(f"💸 Loan granted: 50 coins")
 
-        user['coins'] -= total_fee
-        user['games_to_play'] = num_games
-        user['revenue'] += total_fee
-        st.success(f"Game started for {num_games} rounds!")
+    st.markdown(f"**💰 Coins:** {user['coins']}")
 
-# ---------- Play Button ----------
-if user['games_to_play'] > 0 and user['games_played'] < user['games_to_play'] and user['coins'] >= 0:
+    # Ask for game count if not initialized
+    if st.session_state.games_to_play == 0:
+        st.session_state.games_to_play = st.selectbox("Select number of games to play:", [5, 10, 15, 20])
+        st.button("✅ Confirm Games")
+
+    # Play the game
     if st.button("▶️ Play"):
-        ball = random.randint(1, 10)
-        payout = 0
+        results = []
+        for _ in range(st.session_state.games_to_play):
+            if user['coins'] < 10:
+                st.error("❌ Insufficient coins! Exiting the game.")
+                break  # End game early
+            
+            # Simulate drawing 6 balls randomly
+            balls = random.choices(["Red", "Blue"], weights=[4, 2], k=6)
+            red_count = balls.count("Red")
+            blue_count = balls.count("Blue")
 
-        if ball == 7:
-            payout = 100
-            st.balloons()
-            st.success("🎉 JACKPOT! You hit 7!")
-        else:
-            payout = 5
-            st.info(f"You drew ball: {ball} and earned 5 coins.")
+            if red_count == 4:
+                payout = 30  # JACKPOT if exactly 4 reds
+                st.balloons()
+                results.append(f"🎉 JACKPOT! You got 4 Red balls → Earned {payout} coins!")
+            elif blue_count == 4:
+                payout = 0  # No reward if 4 blue
+                results.append(f"🚫 No reward. You got 4 Blue balls.")
+            else:
+                payout = 5  # Regular reward
+                results.append(f"🎲 You got {red_count} Red & {blue_count} Blue → Earned {payout} coins.")
 
-        user['coins'] += payout
-        user['payout'] += payout
-        user['games_played'] += 1
-        user['history'].append(ball)
+            user['coins'] += payout - 10  # Deduct entry fee
+            st.session_state.owner_profit += 10  # Owner earns entry fee per game
 
+        # Deduct loan at end of game
+        if user['coins'] > 50:  
+            user['coins'] -= 50  # If loan was granted, deduct from balance
+
+        df.loc[selected_user] = user
+        df.to_csv(CSV_FILE)
+        st.markdown("\n".join(results))
         st.markdown(f"**New Coin Balance:** {user['coins']}")
 
-        if user['games_played'] == user['games_to_play'] or user['coins'] < 10:
-            st.warning("🎮 Game Over for this round. Click Reset to play again.")
-            profit = user['revenue'] - user['payout']
-            st.session_state.owner_profit += profit
-
-# ---------- Game Over Message ----------
-if user['games_to_play'] > 0 and user['games_played'] >= user['games_to_play']:
-    st.warning("🎮 You've played all your games. Click Reset to play a new round.")
-
-# ---------- Reset Button ----------
-if st.button("🔁 Reset Game"):
-    user['games_to_play'] = 0
-    user['games_played'] = 0
-    user['loan_taken'] = False
-    user['loan_amount'] = 0
-    user['revenue'] = 0
-    user['payout'] = 0
-    user['history'] = []
-    st.success("✅ Game has been reset. Coins are retained!")
-
-# ---------- Owner Profit Summary ----------
-if st.button("📊 Show Owner Profit Summary"):
-    st.markdown(f"**💼 Total Profit Earned by Game Owner:** `{st.session_state.owner_profit}` coins")
+    # Quit Game & Save Coins
+    if st.button("🚪 Quit Game"):
+        df.to_csv(CSV_FILE)
+        st.success("✅ Coins saved to your account. See you next time!")
