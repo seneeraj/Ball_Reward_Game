@@ -1,9 +1,9 @@
 import streamlit as st
 import random
 
-# Ensure session variables are initialized before any logic is run
+# Ensure session variables are initialized properly before any logic is run
 if 'coins' not in st.session_state:
-    st.session_state.coins = 60  # Starting with 60 coins
+    st.session_state.coins = 210  # Starting with 210 coins
 if 'loan_taken' not in st.session_state:
     st.session_state.loan_taken = False
 if 'revenue' not in st.session_state:
@@ -60,7 +60,7 @@ if st.session_state.games_to_play == 0:
 if st.session_state.games_to_play > 0 and st.session_state.games_played < st.session_state.games_to_play:
     if st.button("▶️ Play"):
         # Debugging: Check session state variables before proceeding
-        st.write(f"Debugging: Session state - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}")
+        st.write(f"Debugging: Session state before play - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}")
         
         # Play one game at a time
         drawn = random.sample(source_bag, 4)
@@ -77,11 +77,14 @@ if st.session_state.games_to_play > 0 and st.session_state.games_played < st.ses
         elif (red == 3 and blue == 1) or (red == 2 and blue == 2) or (red == 1 and blue == 3):
             reward = 5
 
-        # Update session state
+        # Update session state (revenue, payout, coins)
         st.session_state.revenue += entry_fee_per_game
         st.session_state.payout += reward
         st.session_state.coins += (reward - entry_fee_per_game)
         st.session_state.games_played += 1
+
+        # Debugging: Check session state after play
+        st.write(f"Debugging: Session state after play - revenue: {st.session_state.revenue}, coins: {st.session_state.coins}, payout: {st.session_state.payout}")
 
         # Display the result
         st.markdown(f"### 🎯 Game {st.session_state.games_played} Result")
